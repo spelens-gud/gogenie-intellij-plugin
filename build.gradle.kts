@@ -36,16 +36,20 @@ dependencies {
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
+        fun parseCsvProperty(name: String) = providers.gradleProperty(name).map { raw ->
+            raw.split(',').map(String::trim).filter(String::isNotEmpty)
+        }
+
         intellijIdea(providers.gradleProperty("platformVersion"))
 
         // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
-        bundledPlugins(providers.gradleProperty("platformBundledPlugins").map { it.split(',') })
+        bundledPlugins(parseCsvProperty("platformBundledPlugins"))
 
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
-        plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
+        plugins(parseCsvProperty("platformPlugins"))
 
         // Module Dependencies. Uses `platformBundledModules` property from the gradle.properties file for bundled IntelliJ Platform modules.
-        bundledModules(providers.gradleProperty("platformBundledModules").map { it.split(',') })
+        bundledModules(parseCsvProperty("platformBundledModules"))
 
         testFramework(TestFrameworkType.Platform)
     }

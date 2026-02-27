@@ -5,11 +5,18 @@
     <vendor>spelens-gud</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.plugins.go</depends>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.spelensgud.gogenieintellijplugin.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-        <postStartupActivity implementation="com.github.spelensgud.gogenieintellijplugin.startup.MyProjectActivity" />
+        <notificationGroup id="gogenie.impl" displayType="BALLOON" isLogByDefault="true"/>
+        <completion.contributor language="go"
+                                implementationClass="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieAnnotationCompletionContributor"/>
+        <annotator language="go"
+                   implementationClass="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieAnnotationAnnotator"/>
+        <codeInsight.lineMarkerProvider
+                language="go"
+                implementationClass="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieImplLineMarkerProvider"/>
     </extensions>
 </idea-plugin>

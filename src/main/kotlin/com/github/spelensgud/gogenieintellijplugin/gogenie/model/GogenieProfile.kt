@@ -1,0 +1,25 @@
+package com.github.spelensgud.gogenieintellijplugin.gogenie.model
+
+data class GogenieProfile(
+    val specs: List<AnnotationSpec>,
+    val implAnnotationNames: Set<String> = emptySet(),
+    val configPath: String? = null,
+    val parseError: String? = null,
+) {
+    private val specsByLowerName = specs.associateBy { it.name.lowercase() }
+    private val implAnnotations = implAnnotationNames.map { it.lowercase() }.toSet()
+
+    fun findSpec(name: String): AnnotationSpec? = specsByLowerName[name.lowercase()]
+
+    fun optionSpecsFor(annotationName: String): List<AnnotationOptionSpec> {
+        return findSpec(annotationName)?.options ?: emptyList()
+    }
+
+    fun annotationNamesSorted(): List<AnnotationSpec> {
+        return specs.sortedBy { it.name }
+    }
+
+    fun isImplAnnotation(name: String): Boolean {
+        return implAnnotations.contains(name.lowercase())
+    }
+}
