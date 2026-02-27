@@ -20,6 +20,8 @@
                                  implementation="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieEnumReferenceContributor"/>
         <psi.referenceContributor language="go"
                                  implementation="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieHttpRouteReferenceContributor"/>
+        <psi.referenceContributor language="go"
+                                 implementation="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieMountReferenceContributor"/>
         <codeInsight.lineMarkerProvider
                 language="go"
                 implementationClass="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieImplLineMarkerProvider"/>

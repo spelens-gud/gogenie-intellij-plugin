@@ -21,7 +21,8 @@ class GogenieImplLineMarkerProvider : LineMarkerProvider {
                 continue
             }
 
-            val profile = comment.project.service<GogenieProfileService>().getProfile()
+            val baseProfile = comment.project.service<GogenieProfileService>().getProfile()
+            val profile = GogenieMountAliasCatalog.augmentProfile(baseProfile, comment.containingFile)
             val markers = buildMarkers(comment, profile)
             if (markers.isNotEmpty()) {
                 result.addAll(markers)

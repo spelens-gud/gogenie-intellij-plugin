@@ -49,7 +49,8 @@ class GogenieAnnotationCompletionContributor : CompletionContributor() {
                         return
                     }
 
-                    val profile = comment.project.service<GogenieProfileService>().getProfile()
+                    val baseProfile = comment.project.service<GogenieProfileService>().getProfile()
+                    val profile = GogenieMountAliasCatalog.augmentProfile(baseProfile, comment.containingFile)
 
                     when (completionContext) {
                         is GogenieAnnotationTextAnalyzer.CompletionContext.AnnotationName -> {

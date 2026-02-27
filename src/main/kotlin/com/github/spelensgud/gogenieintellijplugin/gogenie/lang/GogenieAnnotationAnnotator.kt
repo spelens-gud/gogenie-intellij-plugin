@@ -30,7 +30,8 @@ class GogenieAnnotationAnnotator : Annotator {
             return
         }
 
-        val profile = comment.project.service<GogenieProfileService>().getProfile()
+        val baseProfile = comment.project.service<GogenieProfileService>().getProfile()
+        val profile = GogenieMountAliasCatalog.augmentProfile(baseProfile, comment.containingFile)
         val matches = GogenieAnnotationTextAnalyzer.extractAnnotations(comment.text, profile)
         if (matches.isEmpty()) {
             return
@@ -61,6 +62,7 @@ class GogenieAnnotationAnnotator : Annotator {
         }
 
         annotateHttpRouteAnchors(comment, holder, profile, base)
+        annotateMountValueAnchors(comment, holder, profile, base)
 
         val enumAnchors = GogenieEnumLinkResolver.collectCommentEnumAnchors(comment.text, profile)
         for (anchor in enumAnchors) {
@@ -105,6 +107,42 @@ class GogenieAnnotationAnnotator : Annotator {
                 anchor = anchor,
                 profile = profile,
                 deepSearch = false,
+            ) ?: continue
+            if (!target.isValid) {
+                continue
+            }
+            holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
+                .range(TextRange(base + start, base + end))
+                .textAttributes(GogenieTextAttributes.annotationNameByName(anchor.annotationName))
+                .create()
+        }
+    }
+
+    private fun annotateMountValueAnchors(
+        comment: PsiComment,
+        holder: AnnotationHolder,
+        profile: GogenieProfile,
+        base: Int,
+    ) {
+        val anchors = GogenieMountLinkResolver.collectCommentValueAnchors(comment.text, profile)
+        if (anchors.isEmpty()) {
+            return
+        }
+        val commentLength = comment.textLength
+        val service = comment.project.service<GogenieMountBindingService>()
+        val filePath = comment.containingFile.virtualFile?.path
+
+        for (anchor in anchors) {
+            val start = anchor.start.coerceIn(0, commentLength)
+            val end = anchor.end.coerceIn(0, commentLength)
+            if (end <= start) {
+                continue
+            }
+            val target = service.resolveValueTarget(
+                profile = profile,
+                annotationName = anchor.annotationName,
+                valueName = anchor.valueName,
+                contextFilePath = filePath,
             ) ?: continue
             if (!target.isValid) {
                 continue

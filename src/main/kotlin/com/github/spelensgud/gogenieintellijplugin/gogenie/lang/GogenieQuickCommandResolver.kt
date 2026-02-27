@@ -47,6 +47,20 @@ object GogenieQuickCommandResolver {
                 ),
             )
 
+            source.startsWith("mount/") -> {
+                val sub = source.substringAfter("mount/").trim()
+                if (sub.isBlank()) {
+                    emptyList()
+                } else {
+                    listOf(
+                        GogenieQuickCommandSpec(
+                            commandLabel = "mount $sub",
+                            args = listOf("mount", sub),
+                        ),
+                    )
+                }
+            }
+
             source == "rule" -> listOf(
                 GogenieQuickCommandSpec(
                     commandLabel = "rule",

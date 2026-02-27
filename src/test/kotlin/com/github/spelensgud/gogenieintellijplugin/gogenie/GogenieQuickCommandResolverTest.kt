@@ -2,6 +2,7 @@ package com.github.spelensgud.gogenieintellijplugin.gogenie
 
 import com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieQuickCommandResolver
 import com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieQuickCommandSpec
+import com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieMountAliasCatalog
 import com.github.spelensgud.gogenieintellijplugin.gogenie.model.GogenieAnnotationCatalog
 import com.github.spelensgud.gogenieintellijplugin.gogenie.model.GogenieDynamicConfig
 import org.junit.Assert.assertEquals
@@ -57,5 +58,18 @@ class GogenieQuickCommandResolverTest {
         assertEquals(2, commands.size)
         assertTrue(commands.any { it.commandLabel == "http api" && it.args == listOf("http", "api") })
         assertTrue(commands.any { it.commandLabel == "http client" && it.args == listOf("http", "client") })
+    }
+
+    @Test
+    fun `should resolve mount alias command from mount registration`() {
+        val profile = GogenieMountAliasCatalog.augmentProfile(defaultProfile, "// @mount(config)")
+        val base = GogenieQuickCommandResolver.resolve("mount", profile)
+        val alias = GogenieQuickCommandResolver.resolve("config", profile)
+        assertNotNull(base)
+        assertNotNull(alias)
+        assertEquals("mount", base!!.commandLabel)
+        assertEquals(listOf("mount"), base.args)
+        assertEquals("mount config", alias!!.commandLabel)
+        assertEquals(listOf("mount", "config"), alias.args)
     }
 }
