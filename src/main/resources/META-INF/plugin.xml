@@ -25,4 +25,13 @@
                 implementationClass="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieImplLineMarkerProvider"/>
         <gotoDeclarationHandler implementation="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieGotoDeclarationHandler"/>
     </extensions>
+
+    <actions>
+        <action id="Gogenie.Db2Struct"
+                class="com.github.spelensgud.gogenieintellijplugin.gogenie.action.GogenieDb2StructAction"
+                text="gogenie 生成数据库模型"
+                description="执行 gogenie db2struct 生成数据库模型">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+    </actions>
 </idea-plugin>

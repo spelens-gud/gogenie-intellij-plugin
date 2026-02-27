@@ -154,7 +154,7 @@ object GogenieImplGenerationExecutor {
     fun runQuickCommand(
         project: Project,
         sourceFilePath: String,
-        annotationName: String,
+        annotationName: String?,
         command: GogenieQuickCommandSpec,
     ) {
         val moduleDir = findGoModuleDir(sourceFilePath)
@@ -211,11 +211,16 @@ object GogenieImplGenerationExecutor {
                 if (result.exitCode == 0) {
                     VirtualFileManager.getInstance().asyncRefresh(null)
                     val stdout = result.stdout.trim().ifBlank { "已执行 gogenie ${command.commandLabel}" }
+                    val content = if (annotationName.isNullOrBlank()) {
+                        stdout
+                    } else {
+                        "注解 @$annotationName\n$stdout"
+                    }
                     notify(
                         project,
                         NotificationType.INFORMATION,
                         "gogenie ${command.commandLabel} 执行成功",
-                        "注解 @$annotationName\n$stdout",
+                        content,
                     )
                 } else {
                     val stderr = result.stderr.trim().ifBlank { result.stdout.trim() }.ifBlank { "未知错误" }
