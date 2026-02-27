@@ -4,6 +4,9 @@ data class GogenieProfile(
     val specs: List<AnnotationSpec>,
     val implAnnotationNames: Set<String> = emptySet(),
     val enumOutputPath: String = GogenieDynamicConfig.DEFAULT_ENUM_OUTPUT_PATH,
+    val httpApiOutputPath: String = GogenieDynamicConfig.DEFAULT_HTTP_API_OUTPUT_PATH,
+    val httpRouterOutputPath: String = GogenieDynamicConfig.DEFAULT_HTTP_ROUTER_OUTPUT_PATH,
+    val httpClientOutputPath: String = GogenieDynamicConfig.DEFAULT_HTTP_CLIENT_OUTPUT_PATH,
     val configPath: String? = null,
     val parseError: String? = null,
 ) {

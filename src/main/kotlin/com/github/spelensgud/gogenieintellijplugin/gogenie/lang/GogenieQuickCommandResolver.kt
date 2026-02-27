@@ -17,57 +17,76 @@ data class GogenieQuickCommandSpec(
 
 object GogenieQuickCommandResolver {
     fun resolve(annotationName: String, profile: GogenieProfile): GogenieQuickCommandSpec? {
-        val spec = profile.findSpec(annotationName) ?: return null
+        return resolveAll(annotationName, profile).firstOrNull()
+    }
+
+    fun resolveAll(annotationName: String, profile: GogenieProfile): List<GogenieQuickCommandSpec> {
+        val spec = profile.findSpec(annotationName) ?: return emptyList()
         val source = spec.commandSource.lowercase()
         val normalized = annotationName.lowercase()
 
         return when {
-            source == "autowire" -> GogenieQuickCommandSpec(
-                commandLabel = "autowire",
-                args = listOf("autowire"),
+            source == "autowire" -> listOf(
+                GogenieQuickCommandSpec(
+                    commandLabel = "autowire",
+                    args = listOf("autowire"),
+                ),
             )
 
-            source == "enum" -> GogenieQuickCommandSpec(
-                commandLabel = "enum",
-                args = listOf("enum"),
+            source == "enum" -> listOf(
+                GogenieQuickCommandSpec(
+                    commandLabel = "enum",
+                    args = listOf("enum"),
+                ),
             )
 
-            source == "mount" -> GogenieQuickCommandSpec(
-                commandLabel = "mount",
-                args = listOf("mount"),
+            source == "mount" -> listOf(
+                GogenieQuickCommandSpec(
+                    commandLabel = "mount",
+                    args = listOf("mount"),
+                ),
             )
 
-            source == "rule" -> GogenieQuickCommandSpec(
-                commandLabel = "rule",
-                args = listOf("rule"),
-                scopeFlag = "--scope",
-                scopeTarget = GogenieQuickCommandSpec.ScopeTarget.FILE,
+            source == "rule" -> listOf(
+                GogenieQuickCommandSpec(
+                    commandLabel = "rule",
+                    args = listOf("rule"),
+                    scopeFlag = "--scope",
+                    scopeTarget = GogenieQuickCommandSpec.ScopeTarget.FILE,
+                ),
             )
 
-            source == "swagger" -> GogenieQuickCommandSpec(
-                commandLabel = "http swagger",
-                args = listOf("http", "swagger"),
+            source == "swagger" -> listOf(
+                GogenieQuickCommandSpec(
+                    commandLabel = "http swagger",
+                    args = listOf("http", "swagger"),
+                ),
             )
 
-            source == "http" -> GogenieQuickCommandSpec(
-                commandLabel = "http api",
-                args = listOf("http", "api"),
+            source == "http" -> listOf(
+                GogenieQuickCommandSpec(
+                    commandLabel = "http api",
+                    args = listOf("http", "api"),
+                ),
+                GogenieQuickCommandSpec(
+                    commandLabel = "http client",
+                    args = listOf("http", "client"),
+                ),
             )
 
-            source == "impl/http" && !profile.isImplAnnotation(normalized) -> GogenieQuickCommandSpec(
+            source == "impl/http" && !profile.isImplAnnotation(normalized) -> listOf(GogenieQuickCommandSpec(
                 commandLabel = "http router",
                 args = listOf("http", "router"),
-            )
+            ))
 
-            source == "grpc" && !profile.isImplAnnotation(normalized) -> GogenieQuickCommandSpec(
+            source == "grpc" && !profile.isImplAnnotation(normalized) -> listOf(GogenieQuickCommandSpec(
                 commandLabel = "impl grpc",
                 args = listOf("impl", "grpc"),
                 scopeFlag = "--scope",
                 scopeTarget = GogenieQuickCommandSpec.ScopeTarget.FILE,
-            )
+            ))
 
-            else -> null
+            else -> emptyList()
         }
     }
 }
-

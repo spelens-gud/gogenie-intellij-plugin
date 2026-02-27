@@ -1,6 +1,7 @@
 package com.github.spelensgud.gogenieintellijplugin.gogenie.lang
 
 import com.github.spelensgud.gogenieintellijplugin.gogenie.config.GogenieProfileService
+import com.github.spelensgud.gogenieintellijplugin.gogenie.model.GogenieProfile
 import com.goide.psi.GoConstDefinition
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
@@ -59,6 +60,8 @@ class GogenieAnnotationAnnotator : Annotator {
             }
         }
 
+        annotateHttpRouteAnchors(comment, holder, profile, base)
+
         val enumAnchors = GogenieEnumLinkResolver.collectCommentEnumAnchors(comment.text, profile)
         for (anchor in enumAnchors) {
             if (anchor.end <= anchor.start) {
@@ -75,6 +78,39 @@ class GogenieAnnotationAnnotator : Annotator {
             val textRange = TextRange(base + anchor.start, base + anchor.end)
             holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
                 .range(textRange)
+                .textAttributes(GogenieTextAttributes.annotationNameByName(anchor.annotationName))
+                .create()
+        }
+    }
+
+    private fun annotateHttpRouteAnchors(
+        comment: PsiComment,
+        holder: AnnotationHolder,
+        profile: GogenieProfile,
+        base: Int,
+    ) {
+        val anchors = GogenieHttpRouteLinkResolver.collectCommentRouteAnchors(comment.text, profile)
+        if (anchors.isEmpty()) {
+            return
+        }
+        val commentLength = comment.textLength
+        for (anchor in anchors) {
+            val start = anchor.start.coerceIn(0, commentLength)
+            val end = anchor.end.coerceIn(0, commentLength)
+            if (end <= start) {
+                continue
+            }
+            val target = GogenieHttpRouteNavigationService.findRouteElement(
+                comment = comment,
+                anchor = anchor,
+                profile = profile,
+                deepSearch = false,
+            ) ?: continue
+            if (!target.isValid) {
+                continue
+            }
+            holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
+                .range(TextRange(base + start, base + end))
                 .textAttributes(GogenieTextAttributes.annotationNameByName(anchor.annotationName))
                 .create()
         }

@@ -36,6 +36,12 @@ class GogenieConfigParsingTest {
             commands:
               http:
                 indent: api
+                api:
+                  output_path: ./http/apis
+                router:
+                  output_path: ./http/routes
+                client:
+                  output_path: ./http/clients
               enum:
                 indent: state
                 output_path: ./internal/enm
@@ -50,6 +56,9 @@ class GogenieConfigParsingTest {
 
         val cfg = GogenieConfigParser.parse(path)
         assertEquals("api", cfg.httpIndent)
+        assertEquals("./http/apis", cfg.httpApiOutputPath)
+        assertEquals("./http/routes", cfg.httpRouterOutputPath)
+        assertEquals("./http/clients", cfg.httpClientOutputPath)
         assertEquals("state", cfg.enumIndent)
         assertEquals("./internal/enm", cfg.enumOutputPath)
         assertEquals("wiring", cfg.mountName)
@@ -65,6 +74,15 @@ class GogenieConfigParsingTest {
             """
             [commands.http]
             indent = "rest"
+
+            [commands.http.api]
+            output_path = "./gen/apis"
+
+            [commands.http.router]
+            output_path = "./gen/routers"
+
+            [commands.http.client]
+            output_path = "./gen/clients"
 
             [commands.enum]
             indent = "choice"
@@ -83,6 +101,9 @@ class GogenieConfigParsingTest {
 
         val cfg = GogenieConfigParser.parse(path)
         assertEquals("rest", cfg.httpIndent)
+        assertEquals("./gen/apis", cfg.httpApiOutputPath)
+        assertEquals("./gen/routers", cfg.httpRouterOutputPath)
+        assertEquals("./gen/clients", cfg.httpClientOutputPath)
         assertEquals("choice", cfg.enumIndent)
         assertEquals("./internal/enums", cfg.enumOutputPath)
         assertEquals("attach", cfg.mountName)

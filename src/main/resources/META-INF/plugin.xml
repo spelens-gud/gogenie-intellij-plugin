@@ -18,6 +18,8 @@
         <implicitUsageProvider implementation="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieImplicitUsageProvider"/>
         <psi.referenceContributor language="go"
                                  implementation="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieEnumReferenceContributor"/>
+        <psi.referenceContributor language="go"
+                                 implementation="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieHttpRouteReferenceContributor"/>
         <codeInsight.lineMarkerProvider
                 language="go"
                 implementationClass="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieImplLineMarkerProvider"/>

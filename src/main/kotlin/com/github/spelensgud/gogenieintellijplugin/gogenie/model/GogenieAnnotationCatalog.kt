@@ -113,6 +113,9 @@ object GogenieAnnotationCatalog {
             specs = specs.values.toList(),
             implAnnotationNames = dynamicConfig.implServiceNames,
             enumOutputPath = dynamicConfig.enumOutputPath,
+            httpApiOutputPath = dynamicConfig.httpApiOutputPath,
+            httpRouterOutputPath = dynamicConfig.httpRouterOutputPath,
+            httpClientOutputPath = dynamicConfig.httpClientOutputPath,
             configPath = dynamicConfig.configPath?.toString(),
             parseError = dynamicConfig.parseError,
         )

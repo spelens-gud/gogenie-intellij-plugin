@@ -13,6 +13,7 @@ import javax.swing.Icon
 object GogenieCompletionIcons {
     private val annotationCache = ConcurrentHashMap<String, Icon>()
     private val optionCache = ConcurrentHashMap<String, Icon>()
+    private val commandCache = ConcurrentHashMap<String, Icon>()
 
     fun annotation(annotationName: String): Icon {
         val normalized = annotationName.lowercase()
@@ -36,8 +37,27 @@ object GogenieCompletionIcons {
         }
     }
 
+    fun command(annotationName: String, commandLabel: String): Icon {
+        val normalizedAnnotation = annotationName.lowercase()
+        val normalizedCommand = commandLabel.trim().lowercase()
+        val cacheKey = "$normalizedAnnotation|$normalizedCommand"
+        return commandCache.computeIfAbsent(cacheKey) {
+            val color = GogenieTextAttributes.annotationNameByName(normalizedAnnotation)
+                .defaultAttributes
+                .foregroundColor
+                ?: JBColor(Color(0x0B57D0), Color(0x4EA1FF))
+            BadgeIcon(color, commandBadge(normalizedCommand), 12)
+        }
+    }
+
     private fun badgeLetter(annotationName: String): String {
         val head = annotationName.firstOrNull { it.isLetterOrDigit() } ?: '@'
+        return head.uppercaseChar().toString()
+    }
+
+    private fun commandBadge(commandLabel: String): String {
+        val tail = commandLabel.substringAfterLast(' ', commandLabel).trim()
+        val head = tail.firstOrNull { it.isLetterOrDigit() } ?: '@'
         return head.uppercaseChar().toString()
     }
 
@@ -92,4 +112,3 @@ object GogenieCompletionIcons {
         }
     }
 }
-

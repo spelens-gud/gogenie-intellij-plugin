@@ -29,6 +29,12 @@ object GogenieConfigParser {
 
         return GogenieDynamicConfig(
             httpIndent = firstOrNull("commands.http.indent") ?: GogenieDynamicConfig.DEFAULT_HTTP_INDENT,
+            httpApiOutputPath = firstOrNull("commands.http.api.output_path")
+                ?: GogenieDynamicConfig.DEFAULT_HTTP_API_OUTPUT_PATH,
+            httpRouterOutputPath = firstOrNull("commands.http.router.output_path")
+                ?: GogenieDynamicConfig.DEFAULT_HTTP_ROUTER_OUTPUT_PATH,
+            httpClientOutputPath = firstOrNull("commands.http.client.output_path")
+                ?: GogenieDynamicConfig.DEFAULT_HTTP_CLIENT_OUTPUT_PATH,
             enumIndent = firstOrNull("commands.enum.indent") ?: GogenieDynamicConfig.DEFAULT_ENUM_INDENT,
             enumOutputPath = firstOrNull("commands.enum.output_path") ?: GogenieDynamicConfig.DEFAULT_ENUM_OUTPUT_PATH,
             mountName = firstOrNull("commands.mount.name") ?: GogenieDynamicConfig.DEFAULT_MOUNT_NAME,

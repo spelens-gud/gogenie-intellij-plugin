@@ -7,6 +7,7 @@ import com.github.spelensgud.gogenieintellijplugin.gogenie.model.GogenieDynamicC
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GogenieQuickCommandResolverTest {
@@ -49,5 +50,12 @@ class GogenieQuickCommandResolverTest {
         assertEquals("http router", command!!.commandLabel)
         assertEquals(listOf("http", "router"), command.args)
     }
-}
 
+    @Test
+    fun `should resolve http annotation to api and client commands`() {
+        val commands = GogenieQuickCommandResolver.resolveAll("http", defaultProfile)
+        assertEquals(2, commands.size)
+        assertTrue(commands.any { it.commandLabel == "http api" && it.args == listOf("http", "api") })
+        assertTrue(commands.any { it.commandLabel == "http client" && it.args == listOf("http", "client") })
+    }
+}
