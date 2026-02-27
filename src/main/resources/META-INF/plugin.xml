@@ -26,6 +26,10 @@
                 language="go"
                 implementationClass="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieImplLineMarkerProvider"/>
         <gotoDeclarationHandler implementation="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieGotoDeclarationHandler"/>
+        <toolWindow id="gogenie"
+                    anchor="right"
+                    secondary="true"
+                    factoryClass="com.github.spelensgud.gogenieintellijplugin.gogenie.ui.GogenieConfigToolWindowFactory"/>
     </extensions>
 
     <actions>
