@@ -38,6 +38,7 @@ class GogenieConfigParsingTest {
                 indent: api
               enum:
                 indent: state
+                output_path: ./internal/enm
               mount:
                 name: wiring
               impl:
@@ -50,6 +51,7 @@ class GogenieConfigParsingTest {
         val cfg = GogenieConfigParser.parse(path)
         assertEquals("api", cfg.httpIndent)
         assertEquals("state", cfg.enumIndent)
+        assertEquals("./internal/enm", cfg.enumOutputPath)
         assertEquals("wiring", cfg.mountName)
         assertEquals(setOf("svc", "repo"), cfg.implServiceNames)
     }
@@ -66,6 +68,7 @@ class GogenieConfigParsingTest {
 
             [commands.enum]
             indent = "choice"
+            output_path = "./internal/enums"
 
             [commands.mount]
             name = "attach"
@@ -81,6 +84,7 @@ class GogenieConfigParsingTest {
         val cfg = GogenieConfigParser.parse(path)
         assertEquals("rest", cfg.httpIndent)
         assertEquals("choice", cfg.enumIndent)
+        assertEquals("./internal/enums", cfg.enumOutputPath)
         assertEquals("attach", cfg.mountName)
         assertEquals(setOf("svc", "daoex"), cfg.implServiceNames)
     }

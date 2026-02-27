@@ -1,6 +1,7 @@
 package com.github.spelensgud.gogenieintellijplugin.gogenie.lang
 
 import com.github.spelensgud.gogenieintellijplugin.gogenie.config.GogenieProfileService
+import com.goide.psi.GoConstDefinition
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
@@ -8,10 +9,22 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.PsiTreeUtil
 
 class GogenieAnnotationAnnotator : Annotator {
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
-        val comment = element as? PsiComment ?: return
+        if (element is PsiComment) {
+            annotateComment(element, holder)
+            return
+        }
+        if (element is GoConstDefinition) {
+            annotateEnumConstDefinition(element, holder)
+            return
+        }
+        annotateEnumConstIdentifierLeaf(element, holder)
+    }
+
+    private fun annotateComment(comment: PsiComment, holder: AnnotationHolder) {
         if (!isGoElement(comment)) {
             return
         }
@@ -45,6 +58,74 @@ class GogenieAnnotationAnnotator : Annotator {
                     .create()
             }
         }
+
+        val enumAnchors = GogenieEnumLinkResolver.collectCommentEnumAnchors(comment.text, profile)
+        for (anchor in enumAnchors) {
+            if (anchor.end <= anchor.start) {
+                continue
+            }
+            val typeTarget = GogenieEnumNavigationService.findEnumType(
+                project = comment.project,
+                profile = profile,
+                enumName = anchor.enumName,
+            ) ?: continue
+            if (!typeTarget.isValid) {
+                continue
+            }
+            val textRange = TextRange(base + anchor.start, base + anchor.end)
+            holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
+                .range(textRange)
+                .textAttributes(GogenieTextAttributes.annotationNameByName(anchor.annotationName))
+                .create()
+        }
+    }
+
+    private fun annotateEnumConstDefinition(definition: GoConstDefinition, holder: AnnotationHolder) {
+        val file = definition.containingFile
+        if (!file.language.id.equals("go", ignoreCase = true)) {
+            return
+        }
+        val identifier = definition.identifier
+        val profile = definition.project.service<GogenieProfileService>().getProfile()
+        val fileText = file.text
+        val fileStart = file.textRange.startOffset
+        val start = identifier.textRange.startOffset - fileStart
+        if (start < 0 || start > fileText.length) {
+            return
+        }
+
+        val semantic = GogenieEnumLinkResolver.semanticRangeAtOffset(fileText, start, profile) ?: return
+        if (semantic.kind != GogenieEnumLinkResolver.EnumSemanticRange.Kind.CONST_NAME) {
+            return
+        }
+        val typeTarget = GogenieEnumNavigationService.findEnumType(
+            project = definition.project,
+            profile = profile,
+            enumName = semantic.enumName,
+        ) ?: return
+        if (!typeTarget.isValid) {
+            return
+        }
+
+        holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
+            .range(identifier)
+            .enforcedTextAttributes(GogenieTextAttributes.enforcedAttributesByName(semantic.annotationName))
+            .create()
+    }
+
+    private fun annotateEnumConstIdentifierLeaf(element: PsiElement, holder: AnnotationHolder) {
+        val file = element.containingFile ?: return
+        if (!file.language.id.equals("go", ignoreCase = true)) {
+            return
+        }
+        if (element.textLength <= 0 || element.firstChild != null) {
+            return
+        }
+        val parentDef = PsiTreeUtil.getParentOfType(element, GoConstDefinition::class.java, false) ?: return
+        if (parentDef.identifier.textRange != element.textRange) {
+            return
+        }
+        annotateEnumConstDefinition(parentDef, holder)
     }
 
     private fun isGoElement(comment: PsiComment): Boolean {

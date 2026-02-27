@@ -3,6 +3,7 @@ package com.github.spelensgud.gogenieintellijplugin.gogenie.model
 data class GogenieProfile(
     val specs: List<AnnotationSpec>,
     val implAnnotationNames: Set<String> = emptySet(),
+    val enumOutputPath: String = GogenieDynamicConfig.DEFAULT_ENUM_OUTPUT_PATH,
     val configPath: String? = null,
     val parseError: String? = null,
 ) {

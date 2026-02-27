@@ -112,6 +112,7 @@ object GogenieAnnotationCatalog {
         return GogenieProfile(
             specs = specs.values.toList(),
             implAnnotationNames = dynamicConfig.implServiceNames,
+            enumOutputPath = dynamicConfig.enumOutputPath,
             configPath = dynamicConfig.configPath?.toString(),
             parseError = dynamicConfig.parseError,
         )

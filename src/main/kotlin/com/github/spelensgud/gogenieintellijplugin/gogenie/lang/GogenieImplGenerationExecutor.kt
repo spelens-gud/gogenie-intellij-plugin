@@ -7,6 +7,7 @@ import com.intellij.execution.process.ProcessOutput
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.WriteIntentReadAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
@@ -150,6 +151,146 @@ object GogenieImplGenerationExecutor {
         }.queue()
     }
 
+    fun runQuickCommand(
+        project: Project,
+        sourceFilePath: String,
+        annotationName: String,
+        command: GogenieQuickCommandSpec,
+    ) {
+        val moduleDir = findGoModuleDir(sourceFilePath)
+        if (moduleDir == null) {
+            notify(
+                project,
+                NotificationType.ERROR,
+                "未找到 go.mod，无法执行 gogenie ${command.commandLabel}",
+                "请在 Go 模块项目中使用该功能",
+            )
+            return
+        }
+
+        object : Task.Backgroundable(project, "gogenie: 执行 ${command.commandLabel}", false) {
+            override fun run(indicator: ProgressIndicator) {
+                indicator.text = "执行 gogenie ${command.commandLabel}"
+                saveAllDocumentsOnEdt()
+
+                val sourceDir = runCatching { Paths.get(sourceFilePath).toAbsolutePath().parent }
+                    .getOrNull()
+                    ?.toString()
+                    ?: moduleDir.toString()
+                val scope = when (command.scopeTarget) {
+                    GogenieQuickCommandSpec.ScopeTarget.NONE -> null
+                    GogenieQuickCommandSpec.ScopeTarget.FILE -> sourceFilePath
+                    GogenieQuickCommandSpec.ScopeTarget.DIR -> sourceDir
+                }
+
+                val (executable, prefixArgs) = resolveCommand(project)
+                val commandLine = GeneralCommandLine()
+                    .withExePath(executable)
+                    .withWorkDirectory(moduleDir.toFile())
+                    .withCharset(StandardCharsets.UTF_8)
+                    .withEnvironment("LC_ALL", "C.UTF-8")
+
+                commandLine.addParameters(prefixArgs)
+                commandLine.addParameters(command.args)
+                if (!command.scopeFlag.isNullOrBlank() && !scope.isNullOrBlank()) {
+                    commandLine.addParameters(command.scopeFlag, scope)
+                }
+
+                val result = runCatching {
+                    CapturingProcessHandler(commandLine).runProcess(10 * 60 * 1000)
+                }.getOrElse { e ->
+                    notify(
+                        project,
+                        NotificationType.ERROR,
+                        "执行 gogenie ${command.commandLabel} 失败",
+                        e.message ?: e.javaClass.simpleName,
+                    )
+                    return
+                }
+
+                if (result.exitCode == 0) {
+                    VirtualFileManager.getInstance().asyncRefresh(null)
+                    val stdout = result.stdout.trim().ifBlank { "已执行 gogenie ${command.commandLabel}" }
+                    notify(
+                        project,
+                        NotificationType.INFORMATION,
+                        "gogenie ${command.commandLabel} 执行成功",
+                        "注解 @$annotationName\n$stdout",
+                    )
+                } else {
+                    val stderr = result.stderr.trim().ifBlank { result.stdout.trim() }.ifBlank { "未知错误" }
+                    notify(
+                        project,
+                        NotificationType.ERROR,
+                        "gogenie ${command.commandLabel} 执行失败（exit=${result.exitCode}）",
+                        stderr,
+                    )
+                }
+            }
+        }.queue()
+    }
+
+    fun generateEnum(
+        project: Project,
+        sourceFilePath: String,
+        enumName: String,
+    ) {
+        val moduleDir = findGoModuleDir(sourceFilePath)
+        if (moduleDir == null) {
+            notify(
+                project,
+                NotificationType.ERROR,
+                "未找到 go.mod，无法执行 gogenie enum",
+                "请在 Go 模块项目中使用该功能",
+            )
+            return
+        }
+
+        object : Task.Backgroundable(project, "gogenie: 生成枚举 $enumName", false) {
+            override fun run(indicator: ProgressIndicator) {
+                indicator.text = "执行 gogenie enum --name $enumName"
+                saveAllDocumentsOnEdt()
+
+                val (executable, prefixArgs) = resolveCommand(project)
+                val withName = runQuickProcess(
+                    executable = executable,
+                    prefixArgs = prefixArgs,
+                    workDir = moduleDir,
+                    args = listOf("enum", "--name", enumName, "--scope", sourceFilePath),
+                )
+                if (withName == null) {
+                    notify(project, NotificationType.ERROR, "执行 gogenie enum 失败", "命令启动失败，请检查 gogenie 是否可执行")
+                    return
+                }
+
+                val finalResult = if (withName.exitCode != 0 && isNameFlagUnsupported(withName)) {
+                    runQuickProcess(
+                        executable = executable,
+                        prefixArgs = prefixArgs,
+                        workDir = moduleDir,
+                        args = listOf("enum", "--scope", sourceFilePath),
+                    ) ?: withName
+                } else {
+                    withName
+                }
+
+                if (finalResult.exitCode == 0) {
+                    VirtualFileManager.getInstance().asyncRefresh(null)
+                    val stdout = finalResult.stdout.trim().ifBlank { "已生成枚举 $enumName" }
+                    notify(project, NotificationType.INFORMATION, "gogenie enum 执行成功", stdout)
+                } else {
+                    val stderr = finalResult.stderr.trim().ifBlank { finalResult.stdout.trim() }.ifBlank { "未知错误" }
+                    notify(
+                        project,
+                        NotificationType.ERROR,
+                        "gogenie enum 执行失败（exit=${finalResult.exitCode}）",
+                        stderr,
+                    )
+                }
+            }
+        }.queue()
+    }
+
     private fun resolveCommand(project: Project): Pair<String, List<String>> {
         val fromEnv = System.getenv("GOGENIE_BIN")?.trim().orEmpty()
         if (fromEnv.isNotEmpty()) {
@@ -200,6 +341,24 @@ object GogenieImplGenerationExecutor {
         }.getOrNull()
     }
 
+    private fun runQuickProcess(
+        executable: String,
+        prefixArgs: List<String>,
+        workDir: Path,
+        args: List<String>,
+    ): ProcessOutput? {
+        val commandLine = GeneralCommandLine()
+            .withExePath(executable)
+            .withWorkDirectory(workDir.toFile())
+            .withCharset(StandardCharsets.UTF_8)
+            .withEnvironment("LC_ALL", "C.UTF-8")
+        commandLine.addParameters(prefixArgs)
+        commandLine.addParameters(args)
+        return runCatching {
+            CapturingProcessHandler(commandLine).runProcess(10 * 60 * 1000)
+        }.getOrNull()
+    }
+
     private fun isNameFlagUnsupported(output: ProcessOutput): Boolean {
         val msg = (output.stderr + "\n" + output.stdout).lowercase()
         return msg.contains("unknown flag: --name") ||
@@ -231,12 +390,15 @@ object GogenieImplGenerationExecutor {
 
     private fun saveAllDocumentsOnEdt() {
         val app = ApplicationManager.getApplication()
+        val saveAction = Runnable {
+            WriteIntentReadAction.run<RuntimeException> {
+                FileDocumentManager.getInstance().saveAllDocuments()
+            }
+        }
         if (app.isDispatchThread) {
-            FileDocumentManager.getInstance().saveAllDocuments()
+            saveAction.run()
             return
         }
-        app.invokeAndWait {
-            FileDocumentManager.getInstance().saveAllDocuments()
-        }
+        app.invokeAndWait(saveAction)
     }
 }

@@ -30,6 +30,7 @@ object GogenieConfigParser {
         return GogenieDynamicConfig(
             httpIndent = firstOrNull("commands.http.indent") ?: GogenieDynamicConfig.DEFAULT_HTTP_INDENT,
             enumIndent = firstOrNull("commands.enum.indent") ?: GogenieDynamicConfig.DEFAULT_ENUM_INDENT,
+            enumOutputPath = firstOrNull("commands.enum.output_path") ?: GogenieDynamicConfig.DEFAULT_ENUM_OUTPUT_PATH,
             mountName = firstOrNull("commands.mount.name") ?: GogenieDynamicConfig.DEFAULT_MOUNT_NAME,
             implServiceNames = implServices.ifEmpty { GogenieDynamicConfig.DEFAULT_IMPL_SERVICE_NAMES },
             configPath = path,

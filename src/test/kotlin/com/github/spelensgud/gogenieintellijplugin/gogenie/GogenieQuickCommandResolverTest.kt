@@ -1,0 +1,53 @@
+package com.github.spelensgud.gogenieintellijplugin.gogenie
+
+import com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieQuickCommandResolver
+import com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieQuickCommandSpec
+import com.github.spelensgud.gogenieintellijplugin.gogenie.model.GogenieAnnotationCatalog
+import com.github.spelensgud.gogenieintellijplugin.gogenie.model.GogenieDynamicConfig
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Test
+
+class GogenieQuickCommandResolverTest {
+    private val defaultProfile = GogenieAnnotationCatalog.build(GogenieDynamicConfig.defaults())
+
+    @Test
+    fun `should resolve autowire command`() {
+        val command = GogenieQuickCommandResolver.resolve("autowire", defaultProfile)
+        assertNotNull(command)
+        assertEquals(listOf("autowire"), command!!.args)
+    }
+
+    @Test
+    fun `should resolve rule command with file scope`() {
+        val command = GogenieQuickCommandResolver.resolve("rule", defaultProfile)
+        assertNotNull(command)
+        assertEquals(listOf("rule"), command!!.args)
+        assertEquals("--scope", command.scopeFlag)
+        assertEquals(GogenieQuickCommandSpec.ScopeTarget.FILE, command.scopeTarget)
+    }
+
+    @Test
+    fun `should not resolve impl annotation as quick command`() {
+        val command = GogenieQuickCommandResolver.resolve("service", defaultProfile)
+        assertNull(command)
+    }
+
+    @Test
+    fun `should resolve dynamic http indent when not impl annotation`() {
+        val profile = GogenieAnnotationCatalog.build(
+            GogenieDynamicConfig(
+                httpIndent = "api",
+                enumIndent = "enum",
+                mountName = "mount",
+                implServiceNames = setOf("service", "dao", "grpc"),
+            ),
+        )
+        val command = GogenieQuickCommandResolver.resolve("api", profile)
+        assertNotNull(command)
+        assertEquals("http router", command!!.commandLabel)
+        assertEquals(listOf("http", "router"), command.args)
+    }
+}
+

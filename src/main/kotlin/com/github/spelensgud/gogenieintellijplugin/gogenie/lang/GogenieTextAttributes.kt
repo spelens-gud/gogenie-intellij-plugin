@@ -2,6 +2,7 @@ package com.github.spelensgud.gogenieintellijplugin.gogenie.lang
 
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.editor.markup.TextAttributes
+import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.ui.JBColor
 import java.awt.Color
 import java.util.concurrent.ConcurrentHashMap
@@ -41,6 +42,12 @@ object GogenieTextAttributes {
             swaggerNameSet.contains(name) -> ANNOTATION_SWAGGER
             else -> dynamicKey(name)
         }
+    }
+
+    fun enforcedAttributesByName(annotationName: String): TextAttributes {
+        val key = annotationNameByName(annotationName)
+        val fromScheme = EditorColorsManager.getInstance().globalScheme.getAttributes(key)
+        return fromScheme?.clone() ?: key.defaultAttributes.clone()
     }
 
     private fun dynamicKey(name: String): TextAttributesKey {

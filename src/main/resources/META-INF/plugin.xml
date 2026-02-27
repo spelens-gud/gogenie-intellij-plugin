@@ -15,8 +15,12 @@
                                 implementationClass="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieAnnotationCompletionContributor"/>
         <annotator language="go"
                    implementationClass="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieAnnotationAnnotator"/>
+        <implicitUsageProvider implementation="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieImplicitUsageProvider"/>
+        <psi.referenceContributor language="go"
+                                 implementation="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieEnumReferenceContributor"/>
         <codeInsight.lineMarkerProvider
                 language="go"
                 implementationClass="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieImplLineMarkerProvider"/>
+        <gotoDeclarationHandler implementation="com.github.spelensgud.gogenieintellijplugin.gogenie.lang.GogenieGotoDeclarationHandler"/>
     </extensions>
 </idea-plugin>
