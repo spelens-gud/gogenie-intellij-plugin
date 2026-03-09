@@ -7,7 +7,6 @@ import com.intellij.execution.process.ProcessOutput
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.WriteIntentReadAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
@@ -395,15 +394,11 @@ object GogenieImplGenerationExecutor {
 
     private fun saveAllDocumentsOnEdt() {
         val app = ApplicationManager.getApplication()
-        val saveAction = Runnable {
-            WriteIntentReadAction.run<RuntimeException> {
-                FileDocumentManager.getInstance().saveAllDocuments()
-            }
-        }
+        val saveAction = Runnable { FileDocumentManager.getInstance().saveAllDocuments() }
         if (app.isDispatchThread) {
             saveAction.run()
-            return
+        } else {
+            app.invokeAndWait(saveAction)
         }
-        app.invokeAndWait(saveAction)
     }
 }
